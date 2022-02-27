@@ -1,0 +1,39 @@
+pipeline {
+		agent any
+	stages {
+			stage('SCM') {
+						steps {
+							git url: 'https://github.com/paramv10/live-clock.git'
+						}
+			}
+			stage('Build') {
+						steps {
+							sh ' mvn clean install'
+						}
+			}
+			
+			stage(' Code analysis') {
+						steps {
+							withSonarQubeEnv('SonarQube') {
+									sh 'mvn clean package sonar:sonar'
+								}
+							}
+						}
+			stage('Quality Gate') {
+					steps {
+						timeout(time: 2, unit: 'MINUTES') {							
+							waitForQualityGate abortPipeline: true
+						}
+					}
+			}
+			stage('Quality Check Success') {
+				steps {
+					sh ' echo "Successfully completed Quality Check" '
+				}
+			}
+	}
+ }
+	
+//***Note: make sure you enable webhook in SonarQube-server i.e. add jenkins url at: Administration > Configuration > Webhooks > 
+//***set the url to https://YOUR_JENKINS_URL/sonarqube-webhook 
+//*** make sure->url does end in '/'
