@@ -1,0 +1,26 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('SCM') {
+            steps {
+                git 'https://github.com/paramv10/live-clock.git'
+            }
+        }
+        
+        stage('Build Code') {
+            steps {
+                
+                sh "mvn -Dmaven.test.failure.ignore=true clean install"
+            }
+        }
+        
+        stage(' Nexus Upload'){
+            steps {
+                nexusArtifactUploader artifacts: [[artifactId: 'maven-project', classifier: '', file: '/var/lib/jenkins/workspace/nexus-upload-test/webapp/target/webapp.war', type: 'war']], credentialsId: 'd0f249f6-bf1d-46be-9d54-d17bdd9defdd', groupId: 'com.example.maven-project', nexusUrl: 'localhost:8081/repository/maven-snapshots', nexusVersion: 'nexus3', protocol: 'http', repository: 'maven-snapshots', version: '1.0-SNAPSHOT'
+                echo "Upload Success"
+            }
+        }
+
+    }
+}
